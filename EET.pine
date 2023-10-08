@@ -1,0 +1,57 @@
+//@version=5
+//@strategy_alert_message {{strategy.order.alert_message}}
+strategy("Eagle Eye Trading", shorttitle="EET", overlay=true, commission_value=3.00,
+	 commission_type=strategy.commission.cash_per_order)
+
+// Define the Ichimoku Cloud settings
+length9 = 5
+length26 = 8
+length52 = 13
+lips = ta.sma(close, length9)
+teeth = ta.sma(close, length26)
+jaw = ta.sma(close, length52)
+
+// Define the 200 EMA
+ema200 = ta.ema(close, 200)
+
+// Buy condition: Lips crosses over Jaw and is above 200 EMA
+longCondition = ta.crossover(lips, jaw) and close > ema200
+
+// Short condition: Lips crosses under Jaw and is below 200 EMA
+shortCondition = ta.crossunder(lips, jaw) and close < ema200
+
+// Buy condition: Lips crosses over Jaw and is above 200 EMA
+//longCondition = ta.crossover(teeth, jaw) and close > ema200
+
+// Short condition: Lips crosses under Jaw and is below 200 EMA
+//shortCondition = ta.crossunder(teeth, jaw) and close < ema200
+
+// Buy condition: Lips crosses over Jaw and is above 200 EMA
+//longCondition = ta.crossover(lips, teeth) and close > ema200
+
+// Short condition: Lips crosses under Jaw and is below 200 EMA
+//shortCondition = ta.crossunder(lips, teeth) and close < ema200
+alertEntryText = "{{strategy.order.action}} {{strategy.position_size}} {{ticker}} at {{strategy.order.price}}."
+alertExitText = "Closed {{strategy.prev_market_position}} {{ticker}} position at {{strategy.order.price}}."
+
+// Execute the buy and sell orders
+if longCondition
+    strategy.entry("Long", strategy.long, alert_message = alertEntryText)
+if shortCondition
+    strategy.entry("Short", strategy.short, alert_message = alertEntryText)
+
+// Setting Up take profit and stop loss parameters
+strategy.exit("Close Long", from_entry="Long", profit=20, loss=40, alert_message=alertExitText)
+strategy.exit("Close Short", from_entry="Short", profit=20, loss=40, alert_message=alertExitText)
+
+// Plot the Ichimoku Cloud components 
+plot(lips, color=color.blue, title="Lips")
+//plot(teeth, color=color.red, title="Teeth")
+plot(jaw, color=color.green, title="Jaw")
+
+// Plot the 200 EMA
+plot(ema200, color=color.purple, title="200 EMA")
+
+// Plot vertical lines to indicate trade entries
+plotshape(series = longCondition, location = location.belowbar, color = color.green, style = shape.triangleup, size = size.small)
+plotshape(series = shortCondition, location = location.abovebar, color = color.red, style = shape.triangledown, size = size.small)
